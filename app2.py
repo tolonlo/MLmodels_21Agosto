@@ -47,9 +47,13 @@ for col in columnas_numericas:
 # Correlación
 st.subheader("🔗 Matriz de correlación")
 corr = df.corr(numeric_only=True)
-fig, ax = plt.subplots(figsize=(8,6))
-sns.heatmap(corr, annot=True, cmap="YlGnBu", ax=ax)
-st.pyplot(fig)
+
+if corr.empty:
+    st.warning("⚠️ No se pudo calcular la matriz de correlación (no hay suficientes columnas numéricas).")
+else:
+    fig, ax = plt.subplots(figsize=(8,6))
+    sns.heatmap(corr, annot=True, cmap="YlGnBu", ax=ax)
+    st.pyplot(fig)
 
 # Relación con el cultivo
 if "Cultivo" in df.columns:
