@@ -6,14 +6,54 @@ import seaborn as sns
 
 st.set_page_config(page_title="EDA Agricultura", layout="wide")
 
-st.title("🌱 Análisis Exploratorio de Datos Agrícolas")
+st.title("🌱 Análisis Exploratorio de Datos Agrícolas con Limpieza Automática")
 
-# Cargar el dataset directamente
+# Cargar dataset
 df = pd.read_csv("dataset_agricultura.csv")
 
-st.subheader("📋 Vista previa del dataset")
+st.subheader("📋 Vista previa inicial del dataset (sin limpiar)")
 st.dataframe(df.head())
 
+# --- Limpieza automática ---
+st.subheader("🧹 Limpieza automática del dataset")
+
+# Guardar tamaño inicial
+filas_iniciales = df.shape[0]
+columnas_iniciales = df.shape[1]
+
+# Eliminar duplicados
+duplicados = df.duplicated().sum()
+df = df.drop_duplicates()
+
+# Eliminar filas con todos los valores NaN
+filas_nan_completas = df[df.isnull().all(axis=1)].shape[0]
+df = df.dropna(how="all")
+
+# Rellenar valores nulos en columnas numéricas con la media
+nulos_por_col = df.isnull().sum()
+cols_con_nulos = nulos_por_col[nulos_por_col > 0].index.tolist()
+for col in cols_con_nulos:
+    if pd.api.types.is_numeric_dtype(df[col]):
+        df[col] = df[col].fillna(df[col].mean())
+    else:
+        df[col] = df[col].fillna("Desconocido")
+
+filas_finales = df.shape[0]
+columnas_finales = df.shape[1]
+
+# Mostrar resumen de la limpieza
+st.write("✔️ Limpieza realizada:")
+st.write(f"- Filas iniciales: {filas_iniciales}, Filas finales: {filas_finales}")
+st.write(f"- Columnas iniciales: {columnas_iniciales}, Columnas finales: {columnas_finales}")
+st.write(f"- Filas duplicadas eliminadas: {duplicados}")
+st.write(f"- Filas con todos los valores NaN eliminadas: {filas_nan_completas}")
+if cols_con_nulos:
+    st.write(f"- Columnas con valores nulos tratados: {', '.join(cols_con_nulos)}")
+
+st.subheader("📋 Vista previa después de limpieza")
+st.dataframe(df.head())
+
+# --- Análisis exploratorio ---
 st.subheader("📊 Información general")
 st.write(f"Filas: {df.shape[0]} | Columnas: {df.shape[1]}")
 st.write("Columnas del dataset:", list(df.columns))
@@ -22,10 +62,9 @@ st.write("Columnas del dataset:", list(df.columns))
 st.subheader("📈 Estadísticas descriptivas")
 st.write(df.describe())
 
-# Tipos de datos y nulos
-st.subheader("🔍 Tipos de datos y valores faltantes")
+# Tipos de datos
+st.subheader("🔍 Tipos de datos")
 st.write(df.dtypes)
-st.write(df.isnull().sum())
 
 # Histogramas
 st.subheader("📉 Distribución de variables numéricas")
